@@ -1,0 +1,33 @@
+services:
+
+  chatbot:
+    build: .
+    container_name: chatbot_app
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL}
+      OLLAMA_TIMEOUT: ${OLLAMA_TIMEOUT}
+    ports:
+      - "127.0.0.1:8000:8000"
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama_service
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared_connector
+    restart: unless-stopped
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    command: tunnel run
+    depends_on:
+      - chatbot
+
+volumes:
+  ollama_data:
